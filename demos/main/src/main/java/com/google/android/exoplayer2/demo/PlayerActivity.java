@@ -33,6 +33,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.C.ContentType;
+import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackPreparer;
@@ -211,7 +212,7 @@ public class PlayerActivity extends AppCompatActivity
     } else {
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
-      boolean tunneling = intent.getBooleanExtra(TUNNELING_EXTRA, false);
+      boolean tunneling = intent.getBooleanExtra(TUNNELING_EXTRA, true);
       if (Util.SDK_INT >= 21 && tunneling) {
         builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
       }
@@ -376,9 +377,13 @@ public class PlayerActivity extends AppCompatActivity
       trackSelector.setParameters(trackSelectorParameters);
       lastSeenTrackGroupArray = null;
 
+      DefaultLoadControl.Builder loadControlBuilder = new DefaultLoadControl.Builder()
+        .setPrioritizeTimeOverSizeThresholds(false);
+
       player =
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setTrackSelector(trackSelector)
+              .setLoadControl(loadControlBuilder.createDefaultLoadControl())
               .build();
       player.addListener(new PlayerEventListener());
       player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);

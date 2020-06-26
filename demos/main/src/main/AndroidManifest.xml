@@ -33,6 +33,7 @@
       android:icon="@mipmap/ic_launcher"
       android:banner="@drawable/ic_banner"
       android:largeHeap="true"
+      android:hardwareAccelerated="true"
       android:allowBackup="false"
       android:requestLegacyExternalStorage="true"
       android:name="com.google.android.exoplayer2.demo.DemoApplication"
