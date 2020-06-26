@@ -216,6 +216,10 @@ public class PlayerActivity extends AppCompatActivity
       if (Util.SDK_INT >= 21 && tunneling) {
         builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
       }
+      // builder.setViewportSizeToPhysicalDisplaySize(/* context= */ this, false);
+      builder.setViewportSize(Integer.MAX_VALUE, Integer.MAX_VALUE, false);
+      builder.setForceHighestSupportedBitrate(true);
+      builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
       trackSelectorParameters = builder.build();
       clearStartPosition();
     }
