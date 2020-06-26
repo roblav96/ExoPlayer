@@ -79,11 +79,12 @@ public class DemoApplication extends Application {
 
   /** Returns a {@link OkHttpDataSourceFactory}. */
   public OkHttpDataSourceFactory buildHttpDataSourceFactory() {
-    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder();
-    okHttpClientBuilder.followRedirects(true);
-    okHttpClientBuilder.followSslRedirects(true);
-    okHttpClientBuilder.retryOnConnectionFailure(true);
-    return new OkHttpDataSourceFactory(okHttpClientBuilder.build(), userAgent);
+    OkHttpClient okHttpClient = new OkHttpClient.Builder()
+      .followRedirects(true)
+      .followSslRedirects(true)
+      .retryOnConnectionFailure(true)
+      .build();
+    return new OkHttpDataSourceFactory(okHttpClient, userAgent);
     // return new DefaultHttpDataSourceFactory(userAgent);
   }
 

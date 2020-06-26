@@ -377,13 +377,14 @@ public class PlayerActivity extends AppCompatActivity
       trackSelector.setParameters(trackSelectorParameters);
       lastSeenTrackGroupArray = null;
 
-      DefaultLoadControl.Builder loadControlBuilder = new DefaultLoadControl.Builder()
-        .setPrioritizeTimeOverSizeThresholds(false);
+      DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+        .setPrioritizeTimeOverSizeThresholds(false)
+        .createDefaultLoadControl();
 
       player =
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setTrackSelector(trackSelector)
-              .setLoadControl(loadControlBuilder.createDefaultLoadControl())
+              .setLoadControl(loadControl)
               .build();
       player.addListener(new PlayerEventListener());
       player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);
