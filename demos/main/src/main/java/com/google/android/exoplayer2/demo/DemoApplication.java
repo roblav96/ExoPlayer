@@ -56,6 +56,7 @@ public class DemoApplication extends Application {
   private static final String DOWNLOAD_CONTENT_DIRECTORY = "downloads";
 
   protected String userAgent;
+  protected OkHttpClient okHttpClient;
 
   private DatabaseProvider databaseProvider;
   private File downloadDirectory;
@@ -68,6 +69,11 @@ public class DemoApplication extends Application {
   public void onCreate() {
     super.onCreate();
     userAgent = Util.getUserAgent(this, "ExoPlayerDemo");
+    okHttpClient = new OkHttpClient.Builder()
+      .followRedirects(true)
+      .followSslRedirects(true)
+      .retryOnConnectionFailure(true)
+      .build();
   }
 
   /** Returns a {@link DataSource.Factory}. */
@@ -79,13 +85,7 @@ public class DemoApplication extends Application {
 
   /** Returns a {@link OkHttpDataSourceFactory}. */
   public OkHttpDataSourceFactory buildHttpDataSourceFactory() {
-    OkHttpClient okHttpClient = new OkHttpClient.Builder()
-      .followRedirects(true)
-      .followSslRedirects(true)
-      .retryOnConnectionFailure(true)
-      .build();
     return new OkHttpDataSourceFactory(okHttpClient, userAgent);
-    // return new DefaultHttpDataSourceFactory(userAgent);
   }
 
   /** Returns whether extension renderers should be used. */
