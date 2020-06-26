@@ -38,7 +38,6 @@ import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor;
 import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.Util;
-import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource;
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
 import okhttp3.OkHttpClient;
 import java.io.File;
@@ -64,17 +63,11 @@ public class DemoApplication extends Application {
   private DownloadManager downloadManager;
   private DownloadTracker downloadTracker;
   private DownloadNotificationHelper downloadNotificationHelper;
-  private OkHttpClient okHttpClient;
 
   @Override
   public void onCreate() {
     super.onCreate();
     userAgent = Util.getUserAgent(this, "ExoPlayerDemo");
-    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder();
-    okHttpClientBuilder.followRedirects(true);
-    okHttpClientBuilder.followSslRedirects(true);
-    okHttpClientBuilder.retryOnConnectionFailure(true);
-    okHttpClient = okHttpClientBuilder.build();
   }
 
   /** Returns a {@link DataSource.Factory}. */
@@ -84,9 +77,13 @@ public class DemoApplication extends Application {
     return buildReadOnlyCacheDataSource(upstreamFactory, getDownloadCache());
   }
 
-  /** Returns a {@link HttpDataSource.Factory}. */
-  public HttpDataSource.Factory buildHttpDataSourceFactory() {
-    return new OkHttpDataSourceFactory(okHttpClient, userAgent);
+  /** Returns a {@link OkHttpDataSourceFactory}. */
+  public OkHttpDataSourceFactory buildHttpDataSourceFactory() {
+    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder();
+    okHttpClientBuilder.followRedirects(true);
+    okHttpClientBuilder.followSslRedirects(true);
+    okHttpClientBuilder.retryOnConnectionFailure(true);
+    return new OkHttpDataSourceFactory(okHttpClientBuilder.build(), userAgent);
     // return new DefaultHttpDataSourceFactory(userAgent);
   }
 
