@@ -54,7 +54,6 @@ import com.google.android.exoplayer2.source.ads.AdsLoader;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.ui.DebugTextViewHelper;
 import com.google.android.exoplayer2.ui.StyledPlayerControlView;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
@@ -88,7 +87,6 @@ public class PlayerActivity extends AppCompatActivity
 
   protected StyledPlayerView playerView;
   protected LinearLayout debugRootView;
-  protected TextView debugTextView;
   protected SimpleExoPlayer player;
 
   private boolean isShowingTrackSelectionDialog;
@@ -97,7 +95,6 @@ public class PlayerActivity extends AppCompatActivity
   private List<MediaItem> mediaItems;
   private DefaultTrackSelector trackSelector;
   private DefaultTrackSelector.Parameters trackSelectorParameters;
-  private DebugTextViewHelper debugViewHelper;
   private TrackGroupArray lastSeenTrackGroupArray;
   private boolean startAutoPlay;
   private int startWindow;
@@ -120,7 +117,6 @@ public class PlayerActivity extends AppCompatActivity
 
     setContentView();
     debugRootView = findViewById(R.id.controls_root);
-    debugTextView = findViewById(R.id.debug_text_view);
     selectTracksButton = findViewById(R.id.select_tracks_button);
     selectTracksButton.setOnClickListener(this);
 
@@ -137,9 +133,7 @@ public class PlayerActivity extends AppCompatActivity
     } else {
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
-      if (Util.SDK_INT >= 21) {
-        builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
-      }
+      builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
       builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
       trackSelectorParameters = builder.build();
       clearStartPosition();
@@ -313,8 +307,6 @@ public class PlayerActivity extends AppCompatActivity
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
       playerView.setPlaybackPreparer(this);
-      debugViewHelper = new DebugTextViewHelper(player, debugTextView);
-      debugViewHelper.start();
     }
     boolean haveStartPosition = startWindow != C.INDEX_UNSET;
     if (haveStartPosition) {
@@ -393,8 +385,6 @@ public class PlayerActivity extends AppCompatActivity
     if (player != null) {
       updateTrackSelectorParameters();
       updateStartPosition();
-      debugViewHelper.stop();
-      debugViewHelper = null;
       player.release();
       player = null;
       mediaItems = Collections.emptyList();
