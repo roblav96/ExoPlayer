@@ -309,7 +309,6 @@ public class PlayerActivity extends AppCompatActivity
               .setLoadControl(loadControl)
               .build();
       player.addListener(new PlayerEventListener());
-      player.addAnalyticsListener(new EventLogger(trackSelector));
       player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
