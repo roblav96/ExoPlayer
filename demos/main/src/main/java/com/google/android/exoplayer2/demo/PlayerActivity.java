@@ -134,6 +134,7 @@ public class PlayerActivity extends AppCompatActivity
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
       builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
+      builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
       trackSelectorParameters = builder.build();
       clearStartPosition();
     }
@@ -285,24 +286,27 @@ public class PlayerActivity extends AppCompatActivity
       RenderersFactory renderersFactory =
           DemoUtil.buildRenderersFactory(/* context= */ this, preferExtensionDecoders);
       MediaSourceFactory mediaSourceFactory =
-          new DefaultMediaSourceFactory(dataSourceFactory)
-              .setAdsLoaderProvider(this::getAdsLoader)
-              .setAdViewProvider(playerView);
+          new DefaultMediaSourceFactory(dataSourceFactory);
 
       trackSelector = new DefaultTrackSelector(/* context= */ this);
       trackSelector.setParameters(trackSelectorParameters);
       lastSeenTrackGroupArray = null;
       DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
-        .setPrioritizeTimeOverSizeThresholds(false)
-        .build();
+          .setPrioritizeTimeOverSizeThresholds(false)
+          .build();
       player =
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setMediaSourceFactory(mediaSourceFactory)
               .setTrackSelector(trackSelector)
               .setLoadControl(loadControl)
+              .setWakeMode(C.WAKE_MODE_NETWORK)
               .build();
+      player.setThrowsWhenUsingWrongThread(true);
+      player.setForegroundMode(true);
       player.addListener(new PlayerEventListener());
-      player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);
+      AudioAttributes.Builder audioAttributesBuilder = new AudioAttributes.Builder();
+      audioAttributesBuilder.setContentType(C.CONTENT_TYPE_MOVIE);
+      player.setAudioAttributes(audioAttributesBuilder.build(), /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
       playerView.setPlaybackPreparer(this);
