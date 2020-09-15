@@ -131,6 +131,7 @@ public class PlayerActivity extends AppCompatActivity
       startWindow = savedInstanceState.getInt(KEY_WINDOW);
       startPosition = savedInstanceState.getLong(KEY_POSITION);
     } else {
+      FFmpegUtil.create(this);
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
       builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
@@ -392,6 +393,7 @@ public class PlayerActivity extends AppCompatActivity
       player = null;
       mediaItems = Collections.emptyList();
       trackSelector = null;
+      FFmpegUtil.release(this);
     }
     if (adsLoader != null) {
       adsLoader.setPlayer(null);
