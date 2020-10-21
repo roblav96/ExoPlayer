@@ -305,7 +305,9 @@ public class PlayerActivity extends AppCompatActivity
       player.setForegroundMode(true);
       player.addListener(new PlayerEventListener());
       AudioAttributes.Builder audioAttributesBuilder = new AudioAttributes.Builder();
+      // audioAttributesBuilder.setUsage(C.USAGE_MEDIA);
       audioAttributesBuilder.setContentType(C.CONTENT_TYPE_MOVIE);
+      // audioAttributesBuilder.setFlag(C.FLAG_HW_AV_SYNC);
       player.setAudioAttributes(audioAttributesBuilder.build(), /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
