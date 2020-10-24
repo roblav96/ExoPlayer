@@ -135,6 +135,7 @@ public class PlayerActivity extends AppCompatActivity
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
       builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
       builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
+      builder.setPreferredAudioLanguage("eng");
       trackSelectorParameters = builder.build();
       clearStartPosition();
     }
