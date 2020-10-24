@@ -3,8 +3,13 @@
 ### 2.12.1 (2020-10-23) ###
 
 *   Core library:
+    *   Fix issue where `Player.setMediaItems` would ignore its `resetPosition`
+        argument ([#8024](https://github.com/google/ExoPlayer/issues/8024)).
     *   Fix bug where streams with highly uneven track durations may get stuck
         in a buffering state
+    *   Switch Guava dependency from `implementation` to `api`
+        ([#7905](https://github.com/google/ExoPlayer/issues/7905),
+        [#7993](https://github.com/google/ExoPlayer/issues/7993)).
     *   Add 403, 500 and 503 to the list of HTTP status codes that can trigger
         failover to another quality variant during adaptive playbacks.
 *   Data sources:
@@ -133,6 +138,10 @@ To learn more about what's new in 2.12, read the corresponding
             playable `MediaSource` instances. A `DefaultMediaSourceFactory` is
             used by default. `Builder.setMediaSourceFactory` allows setting a
             custom factory.
+        *   Update [APK shrinking guide](https://exoplayer.dev/shrinking.html)
+            to explain how shrinking works with the new `MediaItem` and
+            `DefaultMediaSourceFactory` implementations
+            ([#7937](https://github.com/google/ExoPlayer/issues/7937)).
         *   Add additional options to `Builder` that were previously only
             accessible via setters.
         *   Add opt-in to verify correct thread usage with
