@@ -14,7 +14,9 @@
 apply from: "$gradle.ext.exoplayerSettingsDir/common_library_config.gradle"
 
 dependencies {
-    api "com.google.android.gms:play-services-cronet:17.0.0"
+    api "com.google.android.gms:play-services-cronet:17.+"
+    api "org.chromium.net:cronet-api:+"
+    // api "org.chromium.net:cronet-embedded:+"
     implementation project(modulePrefix + 'library-core')
     implementation 'androidx.annotation:annotation:' + androidxAnnotationVersion
     compileOnly 'org.checkerframework:checker-qual:' + checkerframeworkVersion

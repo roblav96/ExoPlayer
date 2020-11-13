@@ -17,17 +17,21 @@ package com.google.android.exoplayer2.demo;
 
 import android.content.Context;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
+import com.google.android.exoplayer2.ExoPlayerLibraryInfo;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.database.DatabaseProvider;
 import com.google.android.exoplayer2.database.ExoDatabaseProvider;
-import com.google.android.exoplayer2.ext.cronet.CronetDataSourceFactory;
-import com.google.android.exoplayer2.ext.cronet.CronetEngineWrapper;
+// import com.google.android.exoplayer2.ext.cronet.CronetDataSourceFactory;
+// import com.google.android.exoplayer2.ext.cronet.CronetEngineWrapper;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
 import com.google.android.exoplayer2.offline.ActionFileUpgradeUtil;
 import com.google.android.exoplayer2.offline.DefaultDownloadIndex;
 import com.google.android.exoplayer2.offline.DownloadManager;
 import com.google.android.exoplayer2.ui.DownloadNotificationHelper;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.upstream.cache.Cache;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
@@ -36,8 +40,15 @@ import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 import com.google.android.exoplayer2.util.Log;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
+import okhttp3.CacheControl;
+import okhttp3.ConnectionSpec;
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
+// import okhttp3.logging.HttpLoggingInterceptor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+// import org.chromium.net.CronetEngine;
 
 /** Utility methods for the demo app. */
 public final class DemoUtil {
@@ -79,9 +90,28 @@ public final class DemoUtil {
   public static synchronized HttpDataSource.Factory getHttpDataSourceFactory(Context context) {
     if (httpDataSourceFactory == null) {
       context = context.getApplicationContext();
-      CronetEngineWrapper cronetEngineWrapper = new CronetEngineWrapper(context);
-      httpDataSourceFactory =
-          new CronetDataSourceFactory(cronetEngineWrapper, Executors.newSingleThreadExecutor());
+
+      // httpDataSourceFactory = new DefaultHttpDataSourceFactory(
+      //     ExoPlayerLibraryInfo.DEFAULT_USER_AGENT,
+      //     DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
+      //     DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
+      //     true);
+
+      OkHttpClient okHttpClient = new OkHttpClient.Builder()
+          // .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
+          .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
+          // .dispatcher(new Dispatcher(Executors.newSingleThreadExecutor()))
+          .build();
+      httpDataSourceFactory = new OkHttpDataSourceFactory(okHttpClient);
+      // httpDataSourceFactory = new OkHttpDataSourceFactory(
+      //     okHttpClient,
+      //     ExoPlayerLibraryInfo.DEFAULT_USER_AGENT,
+      //     CacheControl.FORCE_NETWORK);
+
+      // CronetEngine cronetEngine = new CronetEngine.Builder(context).enableHttp2(true).build();
+      // CronetEngineWrapper cronetEngineWrapper = new CronetEngineWrapper(cronetEngine);
+      // httpDataSourceFactory = new CronetDataSourceFactory(cronetEngineWrapper, Executors.newSingleThreadExecutor());
+
     }
     return httpDataSourceFactory;
   }

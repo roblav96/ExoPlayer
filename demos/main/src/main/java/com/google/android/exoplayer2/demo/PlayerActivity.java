@@ -35,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackPreparer;
 import com.google.android.exoplayer2.Player;
@@ -48,6 +49,7 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryExcep
 import com.google.android.exoplayer2.offline.DownloadRequest;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
+import com.google.android.exoplayer2.source.MediaSource.MediaPeriodId;
 import com.google.android.exoplayer2.source.MediaSourceFactory;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.ads.AdsLoader;
@@ -59,6 +61,7 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.util.ErrorMessageProvider;
 import com.google.android.exoplayer2.util.EventLogger;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 import java.net.CookieHandler;
 import java.net.CookieManager;
@@ -134,8 +137,13 @@ public class PlayerActivity extends AppCompatActivity
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
       builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
-      builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
+      // builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
       builder.setPreferredAudioLanguage("eng");
+      // builder.setPreferredTextLanguage("eng");
+      builder.setSelectUndeterminedTextLanguage(true);
+      // builder.setPreferredTextRoleFlags(C.ROLE_FLAG_SUBTITLE);
+      builder.setDisabledTextTrackSelectionFlags(C.SELECTION_FLAG_AUTOSELECT | C.SELECTION_FLAG_DEFAULT);
+      // builder.setSelectionOverride()
       trackSelectorParameters = builder.build();
       clearStartPosition();
     }
@@ -291,6 +299,19 @@ public class PlayerActivity extends AppCompatActivity
 
       trackSelector = new DefaultTrackSelector(/* context= */ this);
       trackSelector.setParameters(trackSelectorParameters);
+
+      // RendererCapabilities[] textRendererCapabilities =
+      //     new RendererCapabilities[] {ALL_TEXT_FORMAT_SUPPORTED_RENDERER_CAPABILITIES};
+      // Format.Builder formatBuilder = new Format.Builder()
+      //     .setSampleMimeType(MimeTypes.APPLICATION_SUBRIP)
+      //     .setSampleMimeType(MimeTypes.TEXT_VTT)
+      //     .setSelectionFlags(C.SELECTION_FLAG_FORCED);
+      // Format.Builder formatBuilder = new Format.Builder()
+      //     .setSampleMimeType(MimeTypes.APPLICATION_SUBRIP)
+      //     .setSampleMimeType(MimeTypes.TEXT_VTT)
+      //     .setSelectionFlags(C.SELECTION_FLAG_FORCED)
+      //     .setLanguage("eng");
+
       lastSeenTrackGroupArray = null;
       DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
           .setPrioritizeTimeOverSizeThresholds(false)
