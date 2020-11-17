@@ -24,6 +24,7 @@ import com.google.android.exoplayer2.database.ExoDatabaseProvider;
 // import com.google.android.exoplayer2.ext.cronet.CronetDataSourceFactory;
 // import com.google.android.exoplayer2.ext.cronet.CronetEngineWrapper;
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
+import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.offline.ActionFileUpgradeUtil;
 import com.google.android.exoplayer2.offline.DefaultDownloadIndex;
 import com.google.android.exoplayer2.offline.DownloadManager;
@@ -84,6 +85,9 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
+        .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD_ASYNCHRONOUS_QUEUEING)
+        .setEnableAudioFloatOutput(true)
+        .setEnableAudioOffload(true)
         .setExtensionRendererMode(extensionRendererMode);
   }
 
@@ -100,7 +104,7 @@ public final class DemoUtil {
       OkHttpClient okHttpClient = new OkHttpClient.Builder()
           // .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
           .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
-          // .dispatcher(new Dispatcher(Executors.newSingleThreadExecutor()))
+          // .dispatcher(new Dispatcher(Executors.newCachedThreadPool()))
           .build();
       httpDataSourceFactory = new OkHttpDataSourceFactory(okHttpClient);
       // httpDataSourceFactory = new OkHttpDataSourceFactory(
