@@ -20,8 +20,7 @@ import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.database.DatabaseProvider;
 import com.google.android.exoplayer2.database.ExoDatabaseProvider;
-import com.google.android.exoplayer2.ext.cronet.CronetDataSourceFactory;
-import com.google.android.exoplayer2.ext.cronet.CronetEngineWrapper;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
 import com.google.android.exoplayer2.offline.ActionFileUpgradeUtil;
 import com.google.android.exoplayer2.offline.DefaultDownloadIndex;
 import com.google.android.exoplayer2.offline.DownloadManager;
@@ -36,7 +35,11 @@ import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 import com.google.android.exoplayer2.util.Log;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
+import okhttp3.ConnectionSpec;
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /** Utility methods for the demo app. */
@@ -73,15 +76,22 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
+        .experimentalSetAsynchronousBufferQueueingEnabled(true)
+        // .experimentalSetForceAsyncQueueingSynchronizationWorkaround(true)
+        // .experimentalSetSynchronizeCodecInteractionsWithQueueingEnabled(true)
+        .setEnableAudioOffload(true)
+        .setEnableAudioFloatOutput(true)
         .setExtensionRendererMode(extensionRendererMode);
   }
 
   public static synchronized HttpDataSource.Factory getHttpDataSourceFactory(Context context) {
     if (httpDataSourceFactory == null) {
       context = context.getApplicationContext();
-      CronetEngineWrapper cronetEngineWrapper = new CronetEngineWrapper(context);
-      httpDataSourceFactory =
-          new CronetDataSourceFactory(cronetEngineWrapper, Executors.newSingleThreadExecutor());
+      OkHttpClient okHttpClient = new OkHttpClient.Builder()
+          .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
+          .dispatcher(new Dispatcher(Executors.newSingleThreadExecutor()))
+          .build();
+      httpDataSourceFactory = new OkHttpDataSourceFactory(okHttpClient);
     }
     return httpDataSourceFactory;
   }

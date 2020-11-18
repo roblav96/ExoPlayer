@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
@@ -52,8 +53,8 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.DebugTextViewHelper;
-import com.google.android.exoplayer2.ui.StyledPlayerControlView;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
+import com.google.android.exoplayer2.ui.PlayerControlView;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.util.ErrorMessageProvider;
 import com.google.android.exoplayer2.util.EventLogger;
@@ -68,7 +69,7 @@ import java.util.Map;
 
 /** An activity that plays media using {@link SimpleExoPlayer}. */
 public class PlayerActivity extends AppCompatActivity
-    implements OnClickListener, StyledPlayerControlView.VisibilityListener {
+    implements OnClickListener, PlayerControlView.VisibilityListener {
 
   // Saved instance state keys.
 
@@ -84,7 +85,7 @@ public class PlayerActivity extends AppCompatActivity
     DEFAULT_COOKIE_MANAGER.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
   }
 
-  protected StyledPlayerView playerView;
+  protected PlayerView playerView;
   protected LinearLayout debugRootView;
   protected TextView debugTextView;
   protected SimpleExoPlayer player;
@@ -118,6 +119,10 @@ public class PlayerActivity extends AppCompatActivity
     setContentView();
     debugRootView = findViewById(R.id.controls_root);
     debugTextView = findViewById(R.id.debug_text_view);
+    if (!BuildConfig.DEBUG) {
+      ((LinearLayout) debugTextView.getParent()).removeView(debugTextView);
+      debugTextView = null;
+    }
     selectTracksButton = findViewById(R.id.select_tracks_button);
     selectTracksButton.setOnClickListener(this);
 
@@ -134,6 +139,15 @@ public class PlayerActivity extends AppCompatActivity
     } else {
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
+      builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
+      builder.setForceHighestSupportedBitrate(true);
+      builder.setViewportSize(Integer.MAX_VALUE, Integer.MAX_VALUE, false);
+      // builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
+      builder.setPreferredAudioLanguage("eng");
+      // builder.setPreferredTextLanguage("eng");
+      builder.setSelectUndeterminedTextLanguage(true);
+      // builder.setPreferredTextRoleFlags(C.ROLE_FLAG_SUBTITLE);
+      builder.setDisabledTextTrackSelectionFlags(C.SELECTION_FLAG_AUTOSELECT | C.SELECTION_FLAG_DEFAULT);
       trackSelectorParameters = builder.build();
       clearStartPosition();
     }
@@ -278,25 +292,42 @@ public class PlayerActivity extends AppCompatActivity
       RenderersFactory renderersFactory =
           DemoUtil.buildRenderersFactory(/* context= */ this, preferExtensionDecoders);
       MediaSourceFactory mediaSourceFactory =
-          new DefaultMediaSourceFactory(dataSourceFactory)
-              .setAdsLoaderProvider(this::getAdsLoader)
-              .setAdViewProvider(playerView);
+          new DefaultMediaSourceFactory(dataSourceFactory);
 
       trackSelector = new DefaultTrackSelector(/* context= */ this);
       trackSelector.setParameters(trackSelectorParameters);
       lastSeenTrackGroupArray = null;
+
+      DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+          .setPrioritizeTimeOverSizeThresholds(false)
+          .build();
+      AudioAttributes audioAttributes = new AudioAttributes.Builder()
+          .setContentType(C.CONTENT_TYPE_MOVIE)
+          .setUsage(C.USAGE_MEDIA)
+          .build();
+
       player =
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setMediaSourceFactory(mediaSourceFactory)
               .setTrackSelector(trackSelector)
+              .setLoadControl(loadControl)
+              .experimentalSetThrowWhenStuckBuffering(true)
+              .setUseLazyPreparation(true)
               .build();
+      player.experimentalSetOffloadSchedulingEnabled(true);
+      player.setThrowsWhenUsingWrongThread(true);
+      player.setForegroundMode(true);
       player.addListener(new PlayerEventListener());
-      player.addAnalyticsListener(new EventLogger(trackSelector));
-      player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);
+      if (BuildConfig.DEBUG) {
+        player.addAnalyticsListener(new EventLogger(trackSelector));
+      }
+      player.setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
-      debugViewHelper = new DebugTextViewHelper(player, debugTextView);
-      debugViewHelper.start();
+      if (BuildConfig.DEBUG) {
+        debugViewHelper = new DebugTextViewHelper(player, debugTextView);
+        debugViewHelper.start();
+      }
     }
     boolean haveStartPosition = startWindow != C.INDEX_UNSET;
     if (haveStartPosition) {
@@ -372,8 +403,10 @@ public class PlayerActivity extends AppCompatActivity
     if (player != null) {
       updateTrackSelectorParameters();
       updateStartPosition();
-      debugViewHelper.stop();
-      debugViewHelper = null;
+      if (BuildConfig.DEBUG) {
+        debugViewHelper.stop();
+        debugViewHelper = null;
+      }
       player.release();
       player = null;
       mediaItems = Collections.emptyList();
