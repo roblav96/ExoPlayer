@@ -101,6 +101,7 @@ public class PlayerActivity extends AppCompatActivity
   private boolean startAutoPlay;
   private int startWindow;
   private long startPosition;
+  private int audioSessionIdV21;
 
   // For ad playback only.
 
@@ -119,10 +120,6 @@ public class PlayerActivity extends AppCompatActivity
     setContentView();
     debugRootView = findViewById(R.id.controls_root);
     debugTextView = findViewById(R.id.debug_text_view);
-    if (!BuildConfig.DEBUG) {
-      ((LinearLayout) debugTextView.getParent()).removeView(debugTextView);
-      debugTextView = null;
-    }
     selectTracksButton = findViewById(R.id.select_tracks_button);
     selectTracksButton.setOnClickListener(this);
 
@@ -139,7 +136,11 @@ public class PlayerActivity extends AppCompatActivity
     } else {
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
-      builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
+      audioSessionIdV21 = C.generateAudioSessionIdV21(/* context= */ this);
+      builder.setTunnelingAudioSessionId(audioSessionIdV21);
+      builder.setAllowAudioMixedChannelCountAdaptiveness(true);
+      builder.setAllowAudioMixedMimeTypeAdaptiveness(true);
+      builder.setAllowAudioMixedSampleRateAdaptiveness(true);
       builder.setForceHighestSupportedBitrate(true);
       builder.setViewportSize(Integer.MAX_VALUE, Integer.MAX_VALUE, false);
       // builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
@@ -311,23 +312,21 @@ public class PlayerActivity extends AppCompatActivity
               .setMediaSourceFactory(mediaSourceFactory)
               .setTrackSelector(trackSelector)
               .setLoadControl(loadControl)
+              .setWakeMode(C.WAKE_MODE_LOCAL)
               .experimentalSetThrowWhenStuckBuffering(true)
               .setUseLazyPreparation(true)
               .build();
       player.experimentalSetOffloadSchedulingEnabled(true);
       player.setThrowsWhenUsingWrongThread(true);
       player.setForegroundMode(true);
+      player.setAudioSessionId(audioSessionIdV21);
       player.addListener(new PlayerEventListener());
-      if (BuildConfig.DEBUG) {
-        player.addAnalyticsListener(new EventLogger(trackSelector));
-      }
+      player.addAnalyticsListener(new EventLogger(trackSelector));
       player.setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
-      if (BuildConfig.DEBUG) {
-        debugViewHelper = new DebugTextViewHelper(player, debugTextView);
-        debugViewHelper.start();
-      }
+      debugViewHelper = new DebugTextViewHelper(player, debugTextView);
+      debugViewHelper.start();
     }
     boolean haveStartPosition = startWindow != C.INDEX_UNSET;
     if (haveStartPosition) {
@@ -403,10 +402,8 @@ public class PlayerActivity extends AppCompatActivity
     if (player != null) {
       updateTrackSelectorParameters();
       updateStartPosition();
-      if (BuildConfig.DEBUG) {
-        debugViewHelper.stop();
-        debugViewHelper = null;
-      }
+      debugViewHelper.stop();
+      debugViewHelper = null;
       player.release();
       player = null;
       mediaItems = Collections.emptyList();
