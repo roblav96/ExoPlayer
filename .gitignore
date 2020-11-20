@@ -68,6 +68,7 @@ extensions/opus/src/main/jni/libopus
 extensions/flac/src/main/jni/flac
 
 # FFmpeg extension
+extensions/ffmpeg/.cxx
 extensions/ffmpeg/src/main/jni/ffmpeg
 
 # Cronet extension
