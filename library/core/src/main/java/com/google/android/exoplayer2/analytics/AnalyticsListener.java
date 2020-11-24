@@ -15,7 +15,10 @@
  */
 package com.google.android.exoplayer2.analytics;
 
+import static com.google.android.exoplayer2.util.Assertions.checkNotNull;
+
 import android.os.Looper;
+import android.util.SparseArray;
 import android.view.Surface;
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
@@ -63,6 +66,38 @@ public interface AnalyticsListener {
 
   /** A set of {@link EventFlags}. */
   final class Events extends MutableFlags {
+
+    private final SparseArray<EventTime> eventTimes;
+
+    /** Creates the set of event flags. */
+    public Events() {
+      eventTimes = new SparseArray<>(/* initialCapacity= */ 0);
+    }
+
+    /**
+     * Returns the {@link EventTime} for the specified event.
+     *
+     * @param event The {@link EventFlags event}.
+     * @return The {@link EventTime} of this event.
+     */
+    public EventTime getEventTime(@EventFlags int event) {
+      return checkNotNull(eventTimes.get(event));
+    }
+
+    /**
+     * Sets the {@link EventTime} values for events recorded in this set.
+     *
+     * @param eventTimes A map from {@link EventFlags} to {@link EventTime}. Must at least contain
+     *     all the events recorded in this set.
+     */
+    public void setEventTimes(SparseArray<EventTime> eventTimes) {
+      this.eventTimes.clear();
+      for (int i = 0; i < size(); i++) {
+        @EventFlags int eventFlag = get(i);
+        this.eventTimes.append(eventFlag, checkNotNull(eventTimes.get(eventFlag)));
+      }
+    }
+
     /**
      * Returns whether the given event occurred.
      *
@@ -73,6 +108,18 @@ public interface AnalyticsListener {
     public boolean contains(@EventFlags int event) {
       // Overridden to add IntDef compiler enforcement and new JavaDoc.
       return super.contains(event);
+    }
+
+    /**
+     * Returns whether any of the given events occurred.
+     *
+     * @param events The {@link EventFlags events}.
+     * @return Whether any of the events occurred.
+     */
+    @Override
+    public boolean containsAny(@EventFlags int... events) {
+      // Overridden to add IntDef compiler enforcement and new JavaDoc.
+      return super.containsAny(events);
     }
 
     /**

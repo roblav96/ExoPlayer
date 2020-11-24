@@ -51,6 +51,8 @@
     *   Add `bar_gravity` attribute into `DefaultTimeBar`.
     *   Increase seekbar's touch target height in `StyledPlayerControlView`.
     *   Update Styled Player settings dialogs to respect RTL.
+    *   Support enabling the previous and next actions individually in
+        `PlayerNotificationManager`.
 *   Audio:
     *   Retry playback after some types of `AudioTrack` error.
     *   Work around `AudioManager` crashes when calling `getStreamVolume`
@@ -59,6 +61,8 @@
     *   Matroska: Add support for 32-bit floating point PCM, and 8-bit and
         16-bit big endian integer PCM
         ([#8142](https://github.com/google/ExoPlayer/issues/8142)).
+    *   MP4: Add support for mpeg1 video box
+        ([#8257](https://github.com/google/ExoPlayer/issues/8257)).
 *   DRM:
     *   Fix playback failure when switching from PlayReady protected content to
         Widevine or Clearkey protected content in a playlist.
@@ -69,6 +73,8 @@
         existing decoder instance for the new format, and if not then the
         reasons why.
 *   IMA extension:
+    *   Add support for playback of ads in playlists
+        ([#3750](https://github.com/google/ExoPlayer/issues/3750)).
     *   Upgrade IMA SDK dependency to 3.21.0, and release the `AdsLoader`
         ([#7344](https://github.com/google/ExoPlayer/issues/7344)).
     *   Improve handling of ad tags with unsupported VPAID ads
@@ -76,6 +82,7 @@
     *   Fix a bug that caused multiple ads in an ad pod to be skipped when one
         ad in the ad pod was skipped.
     *   Fix passing an ads response to the `ImaAdsLoader` builder.
+    *   Set the overlay language based on the device locale by default.
 *   Cronet extension:
     *   Fix handling of HTTP status code 200 when making unbounded length range
         requests ([#8090](https://github.com/google/ExoPlayer/issues/8090)).
