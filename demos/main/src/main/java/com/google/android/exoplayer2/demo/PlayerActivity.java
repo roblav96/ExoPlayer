@@ -20,6 +20,7 @@ import static com.google.android.exoplayer2.util.Assertions.checkNotNull;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.View;
@@ -112,6 +113,7 @@ public class PlayerActivity extends AppCompatActivity
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
     dataSourceFactory = DemoUtil.getDataSourceFactory(/* context= */ this);
     if (CookieHandler.getDefault() != DEFAULT_COOKIE_MANAGER) {
       CookieHandler.setDefault(DEFAULT_COOKIE_MANAGER);
@@ -137,10 +139,8 @@ public class PlayerActivity extends AppCompatActivity
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
       audioSessionIdV21 = C.generateAudioSessionIdV21(/* context= */ this);
+      android.util.Log.d("▶", "audioSessionIdV21 -> " + audioSessionIdV21);
       builder.setTunnelingAudioSessionId(audioSessionIdV21);
-      builder.setAllowAudioMixedChannelCountAdaptiveness(true);
-      builder.setAllowAudioMixedMimeTypeAdaptiveness(true);
-      builder.setAllowAudioMixedSampleRateAdaptiveness(true);
       builder.setForceHighestSupportedBitrate(true);
       builder.setViewportSize(Integer.MAX_VALUE, Integer.MAX_VALUE, false);
       // builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
@@ -305,6 +305,7 @@ public class PlayerActivity extends AppCompatActivity
       AudioAttributes audioAttributes = new AudioAttributes.Builder()
           .setContentType(C.CONTENT_TYPE_MOVIE)
           .setUsage(C.USAGE_MEDIA)
+          .setFlags(android.media.AudioAttributes.FLAG_HW_AV_SYNC)
           .build();
 
       player =
@@ -328,6 +329,7 @@ public class PlayerActivity extends AppCompatActivity
       debugViewHelper = new DebugTextViewHelper(player, debugTextView);
       debugViewHelper.start();
     }
+    android.util.Log.d("▶", "player.getAudioSessionId -> " + player.getAudioSessionId());
     boolean haveStartPosition = startWindow != C.INDEX_UNSET;
     if (haveStartPosition) {
       player.seekTo(startWindow, startPosition);

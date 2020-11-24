@@ -80,7 +80,7 @@ public final class DemoUtil {
         .experimentalSetSynchronizeCodecInteractionsWithQueueingEnabled(true)
         .setEnableDecoderFallback(false)
         .setEnableAudioOffload(true)
-        .setEnableAudioFloatOutput(true)
+        // .setEnableAudioFloatOutput(true)
         .setExtensionRendererMode(extensionRendererMode);
   }
 
@@ -89,7 +89,6 @@ public final class DemoUtil {
       context = context.getApplicationContext();
       OkHttpClient okHttpClient = new OkHttpClient.Builder()
           .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
-          .dispatcher(new Dispatcher(Executors.newSingleThreadExecutor()))
           .build();
       httpDataSourceFactory = new OkHttpDataSourceFactory(okHttpClient);
     }
