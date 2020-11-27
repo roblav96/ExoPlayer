@@ -608,7 +608,7 @@ public class MediaCodecAudioRenderer extends MediaCodecRenderer implements Media
     try {
       fullyConsumed = audioSink.handleBuffer(buffer, bufferPresentationTimeUs, sampleCount);
     } catch (InitializationException e) {
-      throw createRendererException(e, format, e.isRecoverable);
+      throw createRendererException(e, e.format, e.isRecoverable);
     } catch (WriteException e) {
       throw createRendererException(e, format, e.isRecoverable);
     }
@@ -629,9 +629,7 @@ public class MediaCodecAudioRenderer extends MediaCodecRenderer implements Media
     try {
       audioSink.playToEndOfStream();
     } catch (AudioSink.WriteException e) {
-      @Nullable Format outputFormat = getOutputFormat();
-      throw createRendererException(
-          e, outputFormat != null ? outputFormat : getInputFormat(), e.isRecoverable);
+      throw createRendererException(e, e.format, e.isRecoverable);
     }
   }
 

@@ -81,6 +81,9 @@
         ([#7832](https://github.com/google/ExoPlayer/issues/7832)).
     *   Fix a bug that caused multiple ads in an ad pod to be skipped when one
         ad in the ad pod was skipped.
+    *   Fix a bug that caused ad progress not to be updated if the player
+        resumed after buffering during an ad
+        ([#8239](https://github.com/google/ExoPlayer/issues/8239)).
     *   Fix passing an ads response to the `ImaAdsLoader` builder.
     *   Set the overlay language based on the device locale by default.
 *   Cronet extension:
@@ -91,6 +94,9 @@
         that lie outside the length of the cue text.
 *   Metadata retriever:
     *   Parse Google Photos HEIC motion photos metadata.
+*   FFMPEG extension:
+    *   Link the FFMPEG library statically, saving 350KB in binary size on
+        average.
 *   Media2 extension:
     *   Notify onBufferingEnded when the state of origin player becomes
         STATE_IDLE or STATE_ENDED.

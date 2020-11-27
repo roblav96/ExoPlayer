@@ -512,8 +512,8 @@ public interface Player {
      *
      * <p>The provided {@code metadataList} is an immutable list of {@link Metadata} instances,
      * where the elements correspond to the {@link #getCurrentTrackSelections() current track
-     * selections}, or an empty list if there are no track selections or the implementation does not
-     * support metadata.
+     * selections}, or an empty list if there are no track selections or the selected tracks contain
+     * no static metadata.
      *
      * <p>The metadata is considered static in the sense that it comes from the tracks' declared
      * Formats, rather than being timed (or dynamic) metadata, which is represented within a
@@ -867,15 +867,21 @@ public interface Player {
   @IntDef({REPEAT_MODE_OFF, REPEAT_MODE_ONE, REPEAT_MODE_ALL})
   @interface RepeatMode {}
   /**
-   * Normal playback without repetition.
+   * Normal playback without repetition. "Previous" and "Next" actions move to the previous and next
+   * windows respectively, and do nothing when there is no previous or next window to move to.
    */
   int REPEAT_MODE_OFF = 0;
   /**
-   * "Repeat One" mode to repeat the currently playing window infinitely.
+   * Repeats the currently playing window infinitely during ongoing playback. "Previous" and "Next"
+   * actions behave as they do in {@link #REPEAT_MODE_OFF}, moving to the previous and next windows
+   * respectively, and doing nothing when there is no previous or next window to move to.
    */
   int REPEAT_MODE_ONE = 1;
   /**
-   * "Repeat All" mode to repeat the entire timeline infinitely.
+   * Repeats the entire timeline infinitely. "Previous" and "Next" actions behave as they do in
+   * {@link #REPEAT_MODE_OFF}, but with looping at the ends so that "Previous" when playing the
+   * first window will move to the last window, and "Next" when playing the last window will move to
+   * the first window.
    */
   int REPEAT_MODE_ALL = 2;
 
@@ -1328,26 +1334,41 @@ public interface Player {
   /**
    * Returns whether a previous window exists, which may depend on the current repeat mode and
    * whether shuffle mode is enabled.
+   *
+   * <p>Note: When the repeat mode is {@link #REPEAT_MODE_ONE}, this method behaves the same as when
+   * the current repeat mode is {@link #REPEAT_MODE_OFF}. See {@link #REPEAT_MODE_ONE} for more
+   * details.
    */
   boolean hasPrevious();
 
   /**
-   * Seeks to the default position of the previous window in the timeline, which may depend on the
-   * current repeat mode and whether shuffle mode is enabled. Does nothing if {@link #hasPrevious()}
-   * is {@code false}.
+   * Seeks to the default position of the previous window, which may depend on the current repeat
+   * mode and whether shuffle mode is enabled. Does nothing if {@link #hasPrevious()} is {@code
+   * false}.
+   *
+   * <p>Note: When the repeat mode is {@link #REPEAT_MODE_ONE}, this method behaves the same as when
+   * the current repeat mode is {@link #REPEAT_MODE_OFF}. See {@link #REPEAT_MODE_ONE} for more
+   * details.
    */
   void previous();
 
   /**
    * Returns whether a next window exists, which may depend on the current repeat mode and whether
    * shuffle mode is enabled.
+   *
+   * <p>Note: When the repeat mode is {@link #REPEAT_MODE_ONE}, this method behaves the same as when
+   * the current repeat mode is {@link #REPEAT_MODE_OFF}. See {@link #REPEAT_MODE_ONE} for more
+   * details.
    */
   boolean hasNext();
 
   /**
-   * Seeks to the default position of the next window in the timeline, which may depend on the
-   * current repeat mode and whether shuffle mode is enabled. Does nothing if {@link #hasNext()} is
-   * {@code false}.
+   * Seeks to the default position of the next window, which may depend on the current repeat mode
+   * and whether shuffle mode is enabled. Does nothing if {@link #hasNext()} is {@code false}.
+   *
+   * <p>Note: When the repeat mode is {@link #REPEAT_MODE_ONE}, this method behaves the same as when
+   * the current repeat mode is {@link #REPEAT_MODE_OFF}. See {@link #REPEAT_MODE_ONE} for more
+   * details.
    */
   void next();
 
@@ -1433,7 +1454,7 @@ public interface Player {
    *
    * <p>The returned {@code metadataList} is an immutable list of {@link Metadata} instances, where
    * the elements correspond to the {@link #getCurrentTrackSelections() current track selections},
-   * or an empty list if there are no track selections or the implementation does not support
+   * or an empty list if there are no track selections or the selected tracks contain no static
    * metadata.
    *
    * <p>This metadata is considered static in that it comes from the tracks' declared Formats,
@@ -1465,18 +1486,24 @@ public interface Player {
   int getCurrentWindowIndex();
 
   /**
-   * Returns the index of the next timeline window to be played, which may depend on the current
-   * repeat mode and whether shuffle mode is enabled. Returns {@link C#INDEX_UNSET} if the window
-   * currently being played is the last window or if the {@link #getCurrentTimeline() current
-   * timeline} is empty.
+   * Returns the index of the window that will be played if {@link #next()} is called, which may
+   * depend on the current repeat mode and whether shuffle mode is enabled. Returns {@link
+   * C#INDEX_UNSET} if {@link #hasNext()} is {@code false}.
+   *
+   * <p>Note: When the repeat mode is {@link #REPEAT_MODE_ONE}, this method behaves the same as when
+   * the current repeat mode is {@link #REPEAT_MODE_OFF}. See {@link #REPEAT_MODE_ONE} for more
+   * details.
    */
   int getNextWindowIndex();
 
   /**
-   * Returns the index of the previous timeline window to be played, which may depend on the current
-   * repeat mode and whether shuffle mode is enabled. Returns {@link C#INDEX_UNSET} if the window
-   * currently being played is the first window or if the {@link #getCurrentTimeline() current
-   * timeline} is empty.
+   * Returns the index of the window that will be played if {@link #previous()} is called, which may
+   * depend on the current repeat mode and whether shuffle mode is enabled. Returns {@link
+   * C#INDEX_UNSET} if {@link #hasPrevious()} is {@code false}.
+   *
+   * <p>Note: When the repeat mode is {@link #REPEAT_MODE_ONE}, this method behaves the same as when
+   * the current repeat mode is {@link #REPEAT_MODE_OFF}. See {@link #REPEAT_MODE_ONE} for more
+   * details.
    */
   int getPreviousWindowIndex();
 
