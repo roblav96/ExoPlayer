@@ -27,6 +27,8 @@ import com.google.android.exoplayer2.offline.DownloadManager;
 import com.google.android.exoplayer2.ui.DownloadNotificationHelper;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.upstream.cache.Cache;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
@@ -36,10 +38,14 @@ import com.google.android.exoplayer2.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import okhttp3.ConnectionPool;
 import okhttp3.ConnectionSpec;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /** Utility methods for the demo app. */
@@ -87,10 +93,16 @@ public final class DemoUtil {
   public static synchronized HttpDataSource.Factory getHttpDataSourceFactory(Context context) {
     if (httpDataSourceFactory == null) {
       context = context.getApplicationContext();
-      OkHttpClient okHttpClient = new OkHttpClient.Builder()
+      // httpDataSourceFactory = new DefaultHttpDataSourceFactory();
+      httpDataSourceFactory = new OkHttpDataSourceFactory(new OkHttpClient.Builder()
+          .connectionPool(new ConnectionPool(10, 5, TimeUnit.MINUTES))
           .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
-          .build();
-      httpDataSourceFactory = new OkHttpDataSourceFactory(okHttpClient);
+          .connectTimeout(DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+          .followRedirects(true)
+          .followSslRedirects(true)
+          .protocols(Arrays.asList(Protocol.QUIC, Protocol.HTTP_2, Protocol.HTTP_1_1))
+          .readTimeout(DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+          .build());
     }
     return httpDataSourceFactory;
   }
