@@ -98,6 +98,7 @@ public final class DemoUtil {
           .connectionPool(new ConnectionPool(10, 5, TimeUnit.MINUTES))
           .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
           .connectTimeout(DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+          .dispatcher(new Dispatcher(Executors.newCachedThreadPool()))
           .followRedirects(true)
           .followSslRedirects(true)
           .protocols(Arrays.asList(Protocol.QUIC, Protocol.HTTP_2, Protocol.HTTP_1_1))
