@@ -297,11 +297,11 @@ public class PlayerActivity extends AppCompatActivity
       RenderersFactory renderersFactory =
           DemoUtil.buildRenderersFactory(/* context= */ this, preferExtensionDecoders);
 
-      DefaultExtractorsFactory extractorsFactory = new DefaultExtractorsFactory()
-          .setMatroskaExtractorFlags(MatroskaExtractor.FLAG_DISABLE_SEEK_FOR_CUES);
+      // DefaultExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
+          // .setMatroskaExtractorFlags(MatroskaExtractor.FLAG_DISABLE_SEEK_FOR_CUES);
       MediaSourceFactory mediaSourceFactory =
-          new DefaultMediaSourceFactory(dataSourceFactory, extractorsFactory);
-      // mediaSourceFactory.setStreamKeys();
+          new DefaultMediaSourceFactory(dataSourceFactory /* extractorsFactory */);
+      // // mediaSourceFactory.setStreamKeys();
 
       trackSelector = new DefaultTrackSelector(/* context= */ this);
       trackSelector.setParameters(trackSelectorParameters);
@@ -313,12 +313,12 @@ public class PlayerActivity extends AppCompatActivity
       AudioAttributes audioAttributes = new AudioAttributes.Builder()
           .setContentType(C.CONTENT_TYPE_MOVIE)
           .setUsage(C.USAGE_MEDIA)
-          .setFlags(android.media.AudioAttributes.FLAG_HW_AV_SYNC)
           .build();
 
       player =
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setMediaSourceFactory(mediaSourceFactory)
+              .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
               .setTrackSelector(trackSelector)
               .setLoadControl(loadControl)
               .setWakeMode(C.WAKE_MODE_LOCAL)
@@ -328,10 +328,8 @@ public class PlayerActivity extends AppCompatActivity
       player.experimentalSetOffloadSchedulingEnabled(true);
       player.setThrowsWhenUsingWrongThread(true);
       player.setForegroundMode(true);
-      player.setAudioSessionId(audioSessionIdV21);
       player.addListener(new PlayerEventListener());
       player.addAnalyticsListener(new EventLogger(trackSelector));
-      player.setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
       debugViewHelper = new DebugTextViewHelper(player, debugTextView);
