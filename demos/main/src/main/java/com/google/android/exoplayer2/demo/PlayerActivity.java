@@ -292,6 +292,8 @@ public class PlayerActivity extends AppCompatActivity
         return false;
       }
 
+      android.util.Log.d("▶", "AudioCapabilities -> " + com.google.android.exoplayer2.audio.AudioCapabilities.getCapabilities(getApplicationContext()));
+
       boolean preferExtensionDecoders =
           intent.getBooleanExtra(IntentUtil.PREFER_EXTENSION_DECODERS_EXTRA, false);
       RenderersFactory renderersFactory =
