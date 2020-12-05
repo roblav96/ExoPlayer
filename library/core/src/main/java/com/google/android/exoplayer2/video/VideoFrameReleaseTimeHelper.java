@@ -30,6 +30,7 @@ import androidx.annotation.RequiresApi;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.Renderer;
+import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.Util;
 
 /**
@@ -38,10 +39,22 @@ import com.google.android.exoplayer2.util.Util;
  */
 public final class VideoFrameReleaseTimeHelper {
 
-  private static final long CHOREOGRAPHER_SAMPLE_DELAY_MILLIS = 500;
-  private static final long MAX_ALLOWED_DRIFT_NS = 20_000_000;
+  private static final String TAG = "VideoFrameReleaseTimeHelper";
 
+  /** The period between sampling display VSYNC timestamps, in milliseconds. */
+  private static final long VSYNC_SAMPLE_UPDATE_PERIOD_MS = 500;
+  /**
+   * The maximum adjustment that can be made to a frame release timestamp, in nanoseconds, excluding
+   * the part of the adjustment that aligns frame release timestamps with the display VSYNC.
+   */
+  private static final long MAX_ALLOWED_ADJUSTMENT_NS = 20_000_000;
+  /**
+   * If a frame is targeted to a display VSYNC with timestamp {@code vsyncTime}, the adjusted frame
+   * release timestamp will be calculated as {@code releaseTime = vsyncTime - ((vsyncDuration *
+   * VSYNC_OFFSET_PERCENTAGE) / 100)}.
+   */
   private static final long VSYNC_OFFSET_PERCENTAGE = 80;
+
   private static final int MIN_FRAMES_FOR_ADJUSTMENT = 6;
 
   @Nullable private final WindowManager windowManager;
@@ -49,21 +62,21 @@ public final class VideoFrameReleaseTimeHelper {
   @Nullable private final DefaultDisplayListener displayListener;
 
   private float formatFrameRate;
-  private float playbackSpeed;
+  private double playbackSpeed;
   private long nextFramePresentationTimeUs;
 
   private long vsyncDurationNs;
   private long vsyncOffsetNs;
 
   private boolean haveSync;
-  private long syncUnadjustedReleaseTimeNs;
+  private long syncReleaseTimeNs;
   private long syncFramePresentationTimeNs;
   private long frameCount;
 
   private long pendingLastAdjustedFrameIndex;
-  private long pendingLastAdjustedFramePresentationTimeNs;
+  private long pendingLastAdjustedReleaseTimeNs;
   private long lastAdjustedFrameIndex;
-  private long lastAdjustedFramePresentationTimeNs;
+  private long lastAdjustedReleaseTimeNs;
 
   /**
    * Constructs an instance that smooths frame release timestamps but does not align them with
@@ -139,8 +152,9 @@ public final class VideoFrameReleaseTimeHelper {
    *
    * @param playbackSpeed The player's speed.
    */
-  public void onPlaybackSpeed(float playbackSpeed) {
+  public void onPlaybackSpeed(double playbackSpeed) {
     this.playbackSpeed = playbackSpeed;
+    haveSync = false;
   }
 
   /**
@@ -159,14 +173,16 @@ public final class VideoFrameReleaseTimeHelper {
    */
   public void onNextFrame(long framePresentationTimeUs) {
     lastAdjustedFrameIndex = pendingLastAdjustedFrameIndex;
-    lastAdjustedFramePresentationTimeNs = pendingLastAdjustedFramePresentationTimeNs;
+    lastAdjustedReleaseTimeNs = pendingLastAdjustedReleaseTimeNs;
     nextFramePresentationTimeUs = framePresentationTimeUs;
     frameCount++;
   }
 
   /** Returns the estimated playback frame rate, or {@link C#RATE_UNSET} if unknown. */
   public float getPlaybackFrameRate() {
-    return formatFrameRate == Format.NO_VALUE ? C.RATE_UNSET : (formatFrameRate * playbackSpeed);
+    return formatFrameRate == Format.NO_VALUE
+        ? C.RATE_UNSET
+        : (float) (formatFrameRate * playbackSpeed);
   }
 
   /**
@@ -178,17 +194,16 @@ public final class VideoFrameReleaseTimeHelper {
    * once (if the caller wishes to give the helper the opportunity to refine a release time closer
    * to when the frame needs to be released).
    *
-   * @param unadjustedReleaseTimeNs The frame's unadjusted release time, in nanoseconds and in the
-   *     same time base as {@link System#nanoTime()}.
+   * @param releaseTimeNs The frame's unadjusted release time, in nanoseconds and in the same time
+   *     base as {@link System#nanoTime()}.
    * @return The adjusted frame release timestamp, in nanoseconds and in the same time base as
    *     {@link System#nanoTime()}.
    */
-  public long adjustReleaseTime(long unadjustedReleaseTimeNs) {
+  public long adjustReleaseTime(long releaseTimeNs) {
     long framePresentationTimeNs = nextFramePresentationTimeUs * 1000;
 
     // Until we know better, the adjustment will be a no-op.
-    long adjustedFramePresentationTimeNs = framePresentationTimeNs;
-    long adjustedReleaseTimeNs = unadjustedReleaseTimeNs;
+    long adjustedReleaseTimeNs = releaseTimeNs;
 
     if (haveSync) {
       if (frameCount >= MIN_FRAMES_FOR_ADJUSTMENT) {
@@ -199,23 +214,23 @@ public final class VideoFrameReleaseTimeHelper {
         long averageFrameDurationNs = (framePresentationTimeNs - syncFramePresentationTimeNs)
             / frameCount;
         // Project the adjusted frame time forward using the average.
-        long candidateAdjustedFramePresentationTimeNs =
-            lastAdjustedFramePresentationTimeNs
-                + averageFrameDurationNs * (frameCount - lastAdjustedFrameIndex);
+        long candidateAdjustedReleaseTimeNs =
+            lastAdjustedReleaseTimeNs
+                + getPlayoutDuration(
+                    averageFrameDurationNs * (frameCount - lastAdjustedFrameIndex));
 
-        if (isDriftTooLarge(candidateAdjustedFramePresentationTimeNs, unadjustedReleaseTimeNs)) {
-          haveSync = false;
+        if (adjustmentAllowed(releaseTimeNs, candidateAdjustedReleaseTimeNs)) {
+          adjustedReleaseTimeNs = candidateAdjustedReleaseTimeNs;
         } else {
-          adjustedFramePresentationTimeNs = candidateAdjustedFramePresentationTimeNs;
-          adjustedReleaseTimeNs =
-              syncUnadjustedReleaseTimeNs
-                  + adjustedFramePresentationTimeNs
-                  - syncFramePresentationTimeNs;
+          haveSync = false;
         }
       } else {
         // We're synced but haven't waited the required number of frames to apply an adjustment.
-        // Check drift anyway.
-        if (isDriftTooLarge(framePresentationTimeNs, unadjustedReleaseTimeNs)) {
+        // Check for drift between the proposed and projected frame release timestamps.
+        long projectedReleaseTimeNs =
+            syncReleaseTimeNs
+                + getPlayoutDuration(framePresentationTimeNs - syncFramePresentationTimeNs);
+        if (!adjustmentAllowed(releaseTimeNs, projectedReleaseTimeNs)) {
           haveSync = false;
         }
       }
@@ -224,13 +239,13 @@ public final class VideoFrameReleaseTimeHelper {
     // If we need to sync, do so now.
     if (!haveSync) {
       syncFramePresentationTimeNs = framePresentationTimeNs;
-      syncUnadjustedReleaseTimeNs = unadjustedReleaseTimeNs;
+      syncReleaseTimeNs = releaseTimeNs;
       frameCount = 0;
       haveSync = true;
     }
 
     pendingLastAdjustedFrameIndex = frameCount;
-    pendingLastAdjustedFramePresentationTimeNs = adjustedFramePresentationTimeNs;
+    pendingLastAdjustedReleaseTimeNs = adjustedReleaseTimeNs;
 
     if (vsyncSampler == null || vsyncDurationNs == C.TIME_UNSET) {
       return adjustedReleaseTimeNs;
@@ -253,19 +268,25 @@ public final class VideoFrameReleaseTimeHelper {
   }
 
   private void updateDefaultDisplayRefreshRateParams() {
-    // Note: If we fail to update the parameters, we leave them set to their previous values.
     Display defaultDisplay = windowManager.getDefaultDisplay();
     if (defaultDisplay != null) {
       double defaultDisplayRefreshRate = defaultDisplay.getRefreshRate();
       vsyncDurationNs = (long) (C.NANOS_PER_SECOND / defaultDisplayRefreshRate);
       vsyncOffsetNs = (vsyncDurationNs * VSYNC_OFFSET_PERCENTAGE) / 100;
+    } else {
+      Log.w(TAG, "Unable to query display refresh rate");
+      vsyncDurationNs = C.TIME_UNSET;
+      vsyncOffsetNs = C.TIME_UNSET;
     }
   }
 
-  private boolean isDriftTooLarge(long frameTimeNs, long releaseTimeNs) {
-    long elapsedFrameTimeNs = frameTimeNs - syncFramePresentationTimeNs;
-    long elapsedReleaseTimeNs = releaseTimeNs - syncUnadjustedReleaseTimeNs;
-    return Math.abs(elapsedReleaseTimeNs - elapsedFrameTimeNs) > MAX_ALLOWED_DRIFT_NS;
+  private long getPlayoutDuration(long mediaDuration) {
+    return (long) (mediaDuration / playbackSpeed);
+  }
+
+  private static boolean adjustmentAllowed(
+      long unadjustedReleaseTimeNs, long adjustedReleaseTimeNs) {
+    return Math.abs(unadjustedReleaseTimeNs - adjustedReleaseTimeNs) <= MAX_ALLOWED_ADJUSTMENT_NS;
   }
 
   private static long closestVsync(long releaseTime, long sampledVsyncTime, long vsyncDuration) {
@@ -372,7 +393,7 @@ public final class VideoFrameReleaseTimeHelper {
     @Override
     public void doFrame(long vsyncTimeNs) {
       sampledVsyncTimeNs = vsyncTimeNs;
-      choreographer.postFrameCallbackDelayed(this, CHOREOGRAPHER_SAMPLE_DELAY_MILLIS);
+      choreographer.postFrameCallbackDelayed(this, VSYNC_SAMPLE_UPDATE_PERIOD_MS);
     }
 
     @Override

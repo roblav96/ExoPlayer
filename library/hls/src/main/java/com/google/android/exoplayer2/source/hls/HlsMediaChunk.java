@@ -15,6 +15,8 @@
  */
 package com.google.android.exoplayer2.source.hls;
 
+import static com.google.android.exoplayer2.upstream.DataSpec.FLAG_MIGHT_NOT_USE_FULL_NETWORK_SPEED;
+
 import android.net.Uri;
 import androidx.annotation.Nullable;
 import com.google.android.exoplayer2.C;
@@ -92,10 +94,12 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
     // Media segment.
     HlsMediaPlaylist.SegmentBase mediaSegment = segmentBaseHolder.segmentBase;
     DataSpec dataSpec =
-        new DataSpec(
-            UriUtil.resolveToUri(mediaPlaylist.baseUri, mediaSegment.url),
-            mediaSegment.byteRangeOffset,
-            mediaSegment.byteRangeLength);
+        new DataSpec.Builder()
+            .setUri(UriUtil.resolveToUri(mediaPlaylist.baseUri, mediaSegment.url))
+            .setPosition(mediaSegment.byteRangeOffset)
+            .setLength(mediaSegment.byteRangeLength)
+            .setFlags(segmentBaseHolder.isPreload ? FLAG_MIGHT_NOT_USE_FULL_NETWORK_SPEED : 0)
+            .build();
     boolean mediaSegmentEncrypted = mediaSegmentKey != null;
     @Nullable
     byte[] mediaSegmentIv =
@@ -169,7 +173,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
         segmentEndTimeInPeriodUs,
         segmentBaseHolder.mediaSequence,
         segmentBaseHolder.partIndex,
-        segmentBaseHolder.isPreload,
+        /* isPublished= */ !segmentBaseHolder.isPreload,
         discontinuitySequenceNumber,
         mediaSegment.hasGapTag,
         isMasterTimestampSource,
@@ -205,9 +209,6 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
   /** The part index or {@link C#INDEX_UNSET} if the chunk is a full segment */
   public final int partIndex;
 
-  /** Whether this chunk is a preload chunk. */
-  public final boolean isPreload;
-
   @Nullable private final DataSource initDataSource;
   @Nullable private final DataSpec initDataSpec;
   @Nullable private final HlsMediaChunkExtractor previousExtractor;
@@ -233,6 +234,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
   private boolean loadCompleted;
   private ImmutableList<Integer> sampleQueueFirstSampleIndices;
   private boolean extractorInvalidated;
+  private boolean isPublished;
 
   private HlsMediaChunk(
       HlsExtractorFactory extractorFactory,
@@ -251,7 +253,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
       long endTimeUs,
       long chunkMediaSequence,
       int partIndex,
-      boolean isPreload,
+      boolean isPublished,
       int discontinuitySequenceNumber,
       boolean hasGapTag,
       boolean isMasterTimestampSource,
@@ -272,7 +274,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
         chunkMediaSequence);
     this.mediaSegmentEncrypted = mediaSegmentEncrypted;
     this.partIndex = partIndex;
-    this.isPreload = isPreload;
+    this.isPublished = isPublished;
     this.discontinuitySequenceNumber = discontinuitySequenceNumber;
     this.initDataSpec = initDataSpec;
     this.initDataSource = initDataSource;
@@ -356,6 +358,22 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
     }
   }
 
+  /**
+   * Whether the chunk is a published chunk as opposed to a preload hint that may change when the
+   * playlist updates.
+   */
+  public boolean isPublished() {
+    return isPublished;
+  }
+
+  /**
+   * Sets the publish flag of the media chunk to indicate that it is not based on a part that is a
+   * preload hint in the playlist.
+   */
+  public void publish() {
+    isPublished = true;
+  }
+
   // Internal methods.
 
   @RequiresNonNull("output")
@@ -414,6 +432,14 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
       }
       try {
         while (!loadCanceled && extractor.read(input)) {}
+      } catch (EOFException e) {
+        if ((trackFormat.roleFlags & C.ROLE_FLAG_TRICK_PLAY) != 0) {
+          // See onTruncatedSegmentParsed's javadoc for more info on why we are swallowing the EOF
+          // exception for trick play tracks.
+          extractor.onTruncatedSegmentParsed();
+        } else {
+          throw e;
+        }
       } finally {
         nextLoadPosition = (int) (input.getPosition() - dataSpec.position);
       }

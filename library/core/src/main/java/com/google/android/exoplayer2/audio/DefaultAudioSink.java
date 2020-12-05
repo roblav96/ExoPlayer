@@ -259,7 +259,7 @@ public final class DefaultAudioSink implements AudioSink {
    */
   private static final int AUDIO_TRACK_RETRY_DURATION_MS = 100;
 
-  private static final String TAG = "AudioTrack";
+  private static final String TAG = "DefaultAudioSink";
 
   /**
    * Whether to enable a workaround for an issue where an audio effect does not keep its session
@@ -885,7 +885,9 @@ public final class DefaultAudioSink implements AudioSink {
         writeBuffer(input, avSyncPresentationTimeUs);
       } else {
         AudioProcessor audioProcessor = activeAudioProcessors[index];
-        audioProcessor.queueInput(input);
+        if (index > drainingAudioProcessorIndex) {
+          audioProcessor.queueInput(input);
+        }
         ByteBuffer output = audioProcessor.getOutput();
         outputBuffers[index] = output;
         if (output.hasRemaining()) {

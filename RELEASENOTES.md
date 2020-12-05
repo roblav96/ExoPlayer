@@ -29,6 +29,8 @@
 *   UI:
     *   Show overflow button in `StyledPlayerControlView` only when there is not
         enough space.
+    *   Update StyledPlayer's control overlay scrim from 30% opacity to 60%
+        opacity for Accessibility requirements.
 *   DRM:
     *   Fix playback failure when switching from PlayReady protected content to
         Widevine or Clearkey protected content in a playlist.
@@ -41,18 +43,23 @@
 *   IMA extension:
     *   Add support for playback of ads in playlists
         ([#3750](https://github.com/google/ExoPlayer/issues/3750)).
+    *   Fix a condition where playback can get stuck before an empty ad
+        ([#8205](https://github.com/google/ExoPlayer/issues/8205)).
 *   Metadata retriever:
     *   Parse Google Photos HEIC motion photos metadata.
-*   FFMPEG extension:
-    *   Link the FFMPEG library statically, saving 350KB in binary size on
+*   FFmpeg extension:
+    *   Link the FFmpeg library statically, saving 350KB in binary size on
         average.
+*   Text:
+    *   Gracefully handle null-terminated subtitle content in Matroska
+        containers.
 
 ### 2.12.2 (2020-12-01) ###
 
 *   Core library:
     *   Suppress exceptions from registering and unregistering the stream volume
-        receiver ([#8087](https://github.com/google/ExoPlayer/issues/8087)),
-        ([#8106](https://github.com/google/ExoPlayer/issues/8106)).
+        receiver ([#8087](https://github.com/google/ExoPlayer/issues/8087),
+        [#8106](https://github.com/google/ExoPlayer/issues/8106)).
     *   Suppress ProGuard warnings caused by Guava's compile-only dependencies
         ([#8103](https://github.com/google/ExoPlayer/issues/8103)).
     *   Fix issue that could cause playback to freeze when selecting tracks, if
@@ -105,7 +112,7 @@
         that lie outside the length of the cue text.
 *   Media2 extension:
     *   Notify onBufferingEnded when the state of origin player becomes
-        STATE_IDLE or STATE_ENDED.
+        `STATE_IDLE` or `STATE_ENDED`.
     *   Allow to remove all playlist items that makes the player reset.
 
 ### 2.12.1 (2020-10-23) ###
