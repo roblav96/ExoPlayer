@@ -310,7 +310,6 @@ public class PlayerActivity extends AppCompatActivity
               .setTrackSelector(trackSelector)
               .setBandwidthMeter(bandwidthMeter)
               .setLoadControl(loadControl)
-              .setWakeMode(C.WAKE_MODE_LOCAL)
               .build();
       player.addListener(new PlayerEventListener());
       player.addAnalyticsListener(new EventLogger(trackSelector));
