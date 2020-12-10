@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.View;
@@ -33,6 +34,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
@@ -53,7 +55,9 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.DebugTextViewHelper;
 import com.google.android.exoplayer2.ui.StyledPlayerControlView;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.util.ErrorMessageProvider;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
@@ -108,6 +112,7 @@ public class PlayerActivity extends AppCompatActivity
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
     super.onCreate(savedInstanceState);
     dataSourceFactory = DemoUtil.getDataSourceFactory(/* context= */ this);
     if (CookieHandler.getDefault() != DEFAULT_COOKIE_MANAGER) {
@@ -133,6 +138,12 @@ public class PlayerActivity extends AppCompatActivity
     } else {
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
+      builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
+      builder.setForceHighestSupportedBitrate(true);
+      builder.setViewportSize(Integer.MAX_VALUE, Integer.MAX_VALUE, false);
+      builder.setPreferredAudioLanguage("eng");
+      builder.setSelectUndeterminedTextLanguage(true);
+      builder.setDisabledTextTrackSelectionFlags(C.SELECTION_FLAG_AUTOSELECT | C.SELECTION_FLAG_DEFAULT);
       trackSelectorParameters = builder.build();
       clearStartPosition();
     }
@@ -277,6 +288,19 @@ public class PlayerActivity extends AppCompatActivity
       MediaSourceFactory mediaSourceFactory =
           new DefaultMediaSourceFactory(dataSourceFactory);
 
+      DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+          .setPrioritizeTimeOverSizeThresholds(false)
+          .build();
+      AudioAttributes audioAttributes = new AudioAttributes.Builder()
+          .setContentType(C.CONTENT_TYPE_MOVIE)
+          .setUsage(C.USAGE_MEDIA)
+          .build();
+      DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(/* context= */ this)
+          .setInitialBitrateEstimate(DefaultBandwidthMeter.DEFAULT_INITIAL_BITRATE_ESTIMATE)
+          .setSlidingWindowMaxWeight(DefaultBandwidthMeter.DEFAULT_SLIDING_WINDOW_MAX_WEIGHT * 3)
+          .setResetOnNetworkTypeChange(true)
+          .build();
+
       trackSelector = new DefaultTrackSelector(/* context= */ this);
       trackSelector.setParameters(trackSelectorParameters);
       lastSeenTrackGroupArray = null;
@@ -284,10 +308,13 @@ public class PlayerActivity extends AppCompatActivity
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setMediaSourceFactory(mediaSourceFactory)
               .setTrackSelector(trackSelector)
+              .setBandwidthMeter(bandwidthMeter)
+              .setLoadControl(loadControl)
+              .setWakeMode(C.WAKE_MODE_LOCAL)
               .build();
       player.addListener(new PlayerEventListener());
       player.addAnalyticsListener(new EventLogger(trackSelector));
-      player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);
+      player.setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
       debugViewHelper = new DebugTextViewHelper(player, debugTextView);
