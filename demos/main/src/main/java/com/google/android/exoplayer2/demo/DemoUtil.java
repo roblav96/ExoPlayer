@@ -89,6 +89,7 @@ public final class DemoUtil {
 
   public static synchronized HttpDataSource.Factory getHttpDataSourceFactory(Context context) {
     if (httpDataSourceFactory == null) {
+      // httpDataSourceFactory = new DefaultHttpDataSourceFactory(com.google.android.exoplayer2.ExoPlayerLibraryInfo.DEFAULT_USER_AGENT, DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS, DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS, true);
       httpDataSourceFactory = new OkHttpDataSourceFactory(new OkHttpClient.Builder()
           .connectionPool(new ConnectionPool(100, 10, TimeUnit.MINUTES))
           .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
