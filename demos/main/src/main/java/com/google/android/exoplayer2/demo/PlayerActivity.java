@@ -53,8 +53,8 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.DebugTextViewHelper;
-import com.google.android.exoplayer2.ui.PlayerControlView;
-import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.ui.StyledPlayerControlView;
+import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
@@ -71,7 +71,7 @@ import java.util.Map;
 
 /** An activity that plays media using {@link SimpleExoPlayer}. */
 public class PlayerActivity extends AppCompatActivity
-    implements OnClickListener, PlayerControlView.VisibilityListener {
+    implements OnClickListener, StyledPlayerControlView.VisibilityListener {
 
   // Saved instance state keys.
 
@@ -87,7 +87,7 @@ public class PlayerActivity extends AppCompatActivity
     DEFAULT_COOKIE_MANAGER.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
   }
 
-  protected PlayerView playerView;
+  protected StyledPlayerView playerView;
   protected LinearLayout debugRootView;
   protected TextView debugTextView;
   protected SimpleExoPlayer player;
@@ -258,7 +258,7 @@ public class PlayerActivity extends AppCompatActivity
     }
   }
 
-  // PlayerControlView.VisibilityListener implementation
+  // StyledPlayerControlView.VisibilityListener implementation
 
   @Override
   public void onVisibilityChange(int visibility) {
