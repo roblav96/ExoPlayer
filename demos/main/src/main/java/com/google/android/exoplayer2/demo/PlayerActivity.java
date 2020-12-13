@@ -258,7 +258,7 @@ public class PlayerActivity extends AppCompatActivity
     }
   }
 
-  // StyledPlayerControlView.VisibilityListener implementation
+  // PlayerControlView.VisibilityListener implementation
 
   @Override
   public void onVisibilityChange(int visibility) {
