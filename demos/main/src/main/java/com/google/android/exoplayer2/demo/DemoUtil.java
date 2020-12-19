@@ -16,12 +16,16 @@
 package com.google.android.exoplayer2.demo;
 
 import android.content.Context;
+import android.media.MediaCodec;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.database.DatabaseProvider;
 import com.google.android.exoplayer2.database.ExoDatabaseProvider;
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
+import com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
+import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
+import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
 import com.google.android.exoplayer2.offline.ActionFileUpgradeUtil;
 import com.google.android.exoplayer2.offline.DefaultDownloadIndex;
 import com.google.android.exoplayer2.offline.DownloadManager;
@@ -40,6 +44,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import okhttp3.ConnectionPool;
@@ -73,6 +79,25 @@ public final class DemoUtil {
     return BuildConfig.USE_DECODER_EXTENSIONS;
   }
 
+  // private static final class MyMediaCodecSelector implements MediaCodecSelector {
+  //   // private final MediaCodecSelector exoDefault = MediaCodecSelector.DEFAULT;
+  //   @Override
+  //   public List<MediaCodecInfo> getDecoderInfos(String mimeType, boolean secure, boolean tunneling) throws DecoderQueryException {
+  //     android.util.Log.d("▶", "getDecoderInfos -> " + mimeType);
+  //     List<MediaCodecInfo> exoDefaultMediaCodecInfos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, secure, tunneling);
+  //     android.util.Log.d("▶", "exoDefaultMediaCodecInfos -> " + exoDefaultMediaCodecInfos);
+  //     return exoDefaultMediaCodecInfos;
+  //   }
+  // }
+
+  // private static final MediaCodecSelector mediaCodecSelector =
+  //     (String mimeType, boolean secure, boolean tunneling) -> {
+  //       android.util.Log.d("▶", "getDecoderInfos -> " + mimeType);
+  //       List<MediaCodecInfo> exoDefaultMediaCodecInfos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, secure, tunneling);
+  //       android.util.Log.d("▶", "exoDefaultMediaCodecInfos -> " + exoDefaultMediaCodecInfos);
+  //       return exoDefaultMediaCodecInfos;
+  //     };
+
   public static RenderersFactory buildRenderersFactory(
       Context context, boolean preferExtensionRenderer) {
     @DefaultRenderersFactory.ExtensionRendererMode
@@ -83,7 +108,10 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
-        .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD)
+        // .setMediaCodecSelector(mediaCodecSelector)
+        // .setMediaCodecSelector(new MyMediaCodecSelector())
+        // .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD)
+        // .setEnableAudioTrackPlaybackParams(true)
         .setExtensionRendererMode(extensionRendererMode);
   }
 

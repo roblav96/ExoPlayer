@@ -139,6 +139,13 @@ public class PlayerActivity extends AppCompatActivity
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
       builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
+      // builder.setRendererDisabled(C.TRACK_TYPE_UNKNOWN, true);
+      // builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
+      // builder.setAllowVideoMixedMimeTypeAdaptiveness(true);
+      // builder.setAllowVideoNonSeamlessAdaptiveness(true);
+      // builder.setAllowAudioMixedChannelCountAdaptiveness(true);
+      // builder.setAllowAudioMixedMimeTypeAdaptiveness(true);
+      // builder.setAllowAudioMixedSampleRateAdaptiveness(true);
       builder.setForceHighestSupportedBitrate(true);
       builder.setViewportSize(Integer.MAX_VALUE, Integer.MAX_VALUE, false);
       builder.setPreferredAudioLanguage("eng");
@@ -288,19 +295,6 @@ public class PlayerActivity extends AppCompatActivity
       MediaSourceFactory mediaSourceFactory =
           new DefaultMediaSourceFactory(dataSourceFactory);
 
-      DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
-          .setPrioritizeTimeOverSizeThresholds(false)
-          .build();
-      AudioAttributes audioAttributes = new AudioAttributes.Builder()
-          .setContentType(C.CONTENT_TYPE_MOVIE)
-          .setUsage(C.USAGE_MEDIA)
-          .build();
-      DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(/* context= */ this)
-          .setInitialBitrateEstimate(DefaultBandwidthMeter.DEFAULT_INITIAL_BITRATE_ESTIMATE)
-          .setSlidingWindowMaxWeight(DefaultBandwidthMeter.DEFAULT_SLIDING_WINDOW_MAX_WEIGHT * 3)
-          .setResetOnNetworkTypeChange(true)
-          .build();
-
       trackSelector = new DefaultTrackSelector(/* context= */ this);
       trackSelector.setParameters(trackSelectorParameters);
       lastSeenTrackGroupArray = null;
@@ -308,12 +302,21 @@ public class PlayerActivity extends AppCompatActivity
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setMediaSourceFactory(mediaSourceFactory)
               .setTrackSelector(trackSelector)
-              .setBandwidthMeter(bandwidthMeter)
-              .setLoadControl(loadControl)
+              // .setBandwidthMeter(new DefaultBandwidthMeter.Builder(this)
+              //     .setInitialBitrateEstimate(DefaultBandwidthMeter.DEFAULT_INITIAL_BITRATE_ESTIMATE * 8)
+              //     .setSlidingWindowMaxWeight(DefaultBandwidthMeter.DEFAULT_SLIDING_WINDOW_MAX_WEIGHT * 4)
+              //     .setResetOnNetworkTypeChange(false)
+              //     .build())
+              .setLoadControl(new DefaultLoadControl.Builder()
+                  .setPrioritizeTimeOverSizeThresholds(false)
+                  .build())
+              .setAudioAttributes(new AudioAttributes.Builder()
+                  .setContentType(C.CONTENT_TYPE_MOVIE)
+                  .setUsage(C.USAGE_MEDIA)
+                  .build(), true)
               .build();
       player.addListener(new PlayerEventListener());
       player.addAnalyticsListener(new EventLogger(trackSelector));
-      player.setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
       debugViewHelper = new DebugTextViewHelper(player, debugTextView);
