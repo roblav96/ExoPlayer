@@ -110,8 +110,10 @@ public final class DemoUtil {
     return new DefaultRenderersFactory(context.getApplicationContext())
         // .setMediaCodecSelector(mediaCodecSelector)
         // .setMediaCodecSelector(new MyMediaCodecSelector())
-        // .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD)
-        // .setEnableAudioTrackPlaybackParams(true)
+        .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD)
+        .setEnableAudioFloatOutput(true)
+        .setEnableAudioTrackPlaybackParams(false)
+        .setEnableDecoderFallback(false)
         .setExtensionRendererMode(extensionRendererMode);
   }
 
