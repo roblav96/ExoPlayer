@@ -79,25 +79,6 @@ public final class DemoUtil {
     return BuildConfig.USE_DECODER_EXTENSIONS;
   }
 
-  // private static final class MyMediaCodecSelector implements MediaCodecSelector {
-  //   // private final MediaCodecSelector exoDefault = MediaCodecSelector.DEFAULT;
-  //   @Override
-  //   public List<MediaCodecInfo> getDecoderInfos(String mimeType, boolean secure, boolean tunneling) throws DecoderQueryException {
-  //     android.util.Log.d("▶", "getDecoderInfos -> " + mimeType);
-  //     List<MediaCodecInfo> exoDefaultMediaCodecInfos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, secure, tunneling);
-  //     android.util.Log.d("▶", "exoDefaultMediaCodecInfos -> " + exoDefaultMediaCodecInfos);
-  //     return exoDefaultMediaCodecInfos;
-  //   }
-  // }
-
-  // private static final MediaCodecSelector mediaCodecSelector =
-  //     (String mimeType, boolean secure, boolean tunneling) -> {
-  //       android.util.Log.d("▶", "getDecoderInfos -> " + mimeType);
-  //       List<MediaCodecInfo> exoDefaultMediaCodecInfos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, secure, tunneling);
-  //       android.util.Log.d("▶", "exoDefaultMediaCodecInfos -> " + exoDefaultMediaCodecInfos);
-  //       return exoDefaultMediaCodecInfos;
-  //     };
-
   public static RenderersFactory buildRenderersFactory(
       Context context, boolean preferExtensionRenderer) {
     @DefaultRenderersFactory.ExtensionRendererMode
@@ -108,12 +89,8 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
-        // .setMediaCodecSelector(mediaCodecSelector)
-        // .setMediaCodecSelector(new MyMediaCodecSelector())
         .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD)
         .setEnableAudioFloatOutput(true)
-        .setEnableAudioTrackPlaybackParams(false)
-        .setEnableDecoderFallback(false)
         .setExtensionRendererMode(extensionRendererMode);
   }
 

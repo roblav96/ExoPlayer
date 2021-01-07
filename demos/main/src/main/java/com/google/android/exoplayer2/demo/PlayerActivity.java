@@ -139,14 +139,7 @@ public class PlayerActivity extends AppCompatActivity
       DefaultTrackSelector.ParametersBuilder builder =
           new DefaultTrackSelector.ParametersBuilder(/* context= */ this);
       builder.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(/* context= */ this));
-      // builder.setRendererDisabled(C.TRACK_TYPE_UNKNOWN, true);
-      // builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true);
       builder.setViewportSizeToPhysicalDisplaySize(/* context= */ this, false);
-      builder.setAllowAudioMixedChannelCountAdaptiveness(true);
-      builder.setAllowAudioMixedMimeTypeAdaptiveness(true);
-      builder.setAllowAudioMixedSampleRateAdaptiveness(true);
-      builder.setAllowVideoMixedMimeTypeAdaptiveness(true);
-      builder.setAllowVideoNonSeamlessAdaptiveness(true);
       builder.setForceHighestSupportedBitrate(true);
       builder.setPreferredAudioLanguage("eng");
       builder.setSelectUndeterminedTextLanguage(true);
@@ -302,11 +295,10 @@ public class PlayerActivity extends AppCompatActivity
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setMediaSourceFactory(mediaSourceFactory)
               .setTrackSelector(trackSelector)
-              // .setBandwidthMeter(new DefaultBandwidthMeter.Builder(this)
-              //     .setInitialBitrateEstimate(DefaultBandwidthMeter.DEFAULT_INITIAL_BITRATE_ESTIMATE * 8)
-              //     .setSlidingWindowMaxWeight(DefaultBandwidthMeter.DEFAULT_SLIDING_WINDOW_MAX_WEIGHT * 4)
-              //     .setResetOnNetworkTypeChange(false)
-              //     .build())
+              .setBandwidthMeter(new DefaultBandwidthMeter.Builder(/* context= */ this)
+                  .setInitialBitrateEstimate(DefaultBandwidthMeter.DEFAULT_INITIAL_BITRATE_ESTIMATE * 12)
+                  .setSlidingWindowMaxWeight(DefaultBandwidthMeter.DEFAULT_SLIDING_WINDOW_MAX_WEIGHT * 3)
+                  .build())
               .setLoadControl(new DefaultLoadControl.Builder()
                   .setPrioritizeTimeOverSizeThresholds(false)
                   .build())
