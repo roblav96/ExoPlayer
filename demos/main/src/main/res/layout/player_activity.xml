@@ -25,6 +25,8 @@
       android:layout_width="match_parent"
       android:layout_height="match_parent"
       app:surface_type="surface_view"
+      app:fastforward_increment="30000"
+      app:rewind_increment="15000"
       app:show_buffering="always"/>
 
   <LinearLayout
