@@ -48,11 +48,7 @@ import java.util.List;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import okhttp3.ConnectionPool;
-import okhttp3.ConnectionSpec;
 import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
-import okhttp3.internal.Util;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /** Utility methods for the demo app. */
@@ -89,7 +85,7 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
-        .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD)
+        .experimentalSetMediaCodecOperationMode(MediaCodecRenderer.OPERATION_MODE_ASYNCHRONOUS_DEDICATED_THREAD_ASYNCHRONOUS_QUEUEING)
         .setEnableAudioFloatOutput(true)
         .setExtensionRendererMode(extensionRendererMode);
   }
