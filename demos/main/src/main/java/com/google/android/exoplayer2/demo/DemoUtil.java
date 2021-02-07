@@ -22,8 +22,7 @@ import com.google.android.exoplayer2.ExoPlayerLibraryInfo;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.database.DatabaseProvider;
 import com.google.android.exoplayer2.database.ExoDatabaseProvider;
-import com.google.android.exoplayer2.ext.cronet.CronetDataSource;
-import com.google.android.exoplayer2.ext.cronet.CronetEngineWrapper;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource;
 import com.google.android.exoplayer2.offline.ActionFileUpgradeUtil;
 import com.google.android.exoplayer2.offline.DefaultDownloadIndex;
 import com.google.android.exoplayer2.offline.DownloadManager;
@@ -43,21 +42,13 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.concurrent.Executors;
+import okhttp3.OkHttpClient;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /** Utility methods for the demo app. */
 public final class DemoUtil {
 
   public static final String DOWNLOAD_NOTIFICATION_CHANNEL_ID = "download_channel";
-
-  /**
-   * Whether the demo application uses Cronet for networking. Note that Cronet does not provide
-   * automatic support for cookies (https://github.com/google/ExoPlayer/issues/5975).
-   *
-   * <p>If set to false, the platform's default network stack is used with a {@link CookieManager}
-   * configured in {@link #getHttpDataSourceFactory}.
-   */
-  private static final boolean USE_CRONET_FOR_NETWORKING = true;
 
   private static final String USER_AGENT =
       "ExoPlayerDemo/"
@@ -100,18 +91,11 @@ public final class DemoUtil {
 
   public static synchronized HttpDataSource.Factory getHttpDataSourceFactory(Context context) {
     if (httpDataSourceFactory == null) {
-      if (USE_CRONET_FOR_NETWORKING) {
-        context = context.getApplicationContext();
-        CronetEngineWrapper cronetEngineWrapper =
-            new CronetEngineWrapper(context, USER_AGENT, /* preferGMSCoreCronet= */ false);
-        httpDataSourceFactory =
-            new CronetDataSource.Factory(cronetEngineWrapper, Executors.newSingleThreadExecutor());
-      } else {
-        CookieManager cookieManager = new CookieManager();
-        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
-        CookieHandler.setDefault(cookieManager);
-        httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT);
-      }
+      CookieManager cookieManager = new CookieManager();
+      cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
+      CookieHandler.setDefault(cookieManager);
+      httpDataSourceFactory = new OkHttpDataSource.Factory(new OkHttpClient.Builder().build()).setUserAgent(USER_AGENT);
+      // httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT);
     }
     return httpDataSourceFactory;
   }
