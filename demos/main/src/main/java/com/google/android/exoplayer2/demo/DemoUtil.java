@@ -22,7 +22,6 @@ import com.google.android.exoplayer2.ExoPlayerLibraryInfo;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.database.DatabaseProvider;
 import com.google.android.exoplayer2.database.ExoDatabaseProvider;
-import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource;
 import com.google.android.exoplayer2.offline.ActionFileUpgradeUtil;
 import com.google.android.exoplayer2.offline.DefaultDownloadIndex;
 import com.google.android.exoplayer2.offline.DownloadManager;
@@ -42,7 +41,6 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.concurrent.Executors;
-import okhttp3.OkHttpClient;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /** Utility methods for the demo app. */
@@ -86,6 +84,7 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
+        // .experimentalSetAsynchronousBufferQueueingEnabled(true)
         .setExtensionRendererMode(extensionRendererMode);
   }
 
@@ -94,8 +93,8 @@ public final class DemoUtil {
       CookieManager cookieManager = new CookieManager();
       cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
       CookieHandler.setDefault(cookieManager);
-      httpDataSourceFactory = new OkHttpDataSource.Factory(new OkHttpClient.Builder().build()).setUserAgent(USER_AGENT);
-      // httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT);
+      httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT);
+      // httpDataSourceFactory = new com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource.Factory(new okhttp3.OkHttpClient.Builder().build()).setUserAgent(USER_AGENT);
     }
     return httpDataSourceFactory;
   }

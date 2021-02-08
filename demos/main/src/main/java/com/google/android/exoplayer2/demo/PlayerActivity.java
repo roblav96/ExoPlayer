@@ -93,6 +93,7 @@ public class PlayerActivity extends AppCompatActivity
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    android.os.StrictMode.setThreadPolicy(new android.os.StrictMode.ThreadPolicy.Builder().permitAll().build());
     super.onCreate(savedInstanceState);
     dataSourceFactory = DemoUtil.getDataSourceFactory(/* context= */ this);
 
@@ -272,6 +273,10 @@ public class PlayerActivity extends AppCompatActivity
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
               .setMediaSourceFactory(mediaSourceFactory)
               .setTrackSelector(trackSelector)
+              .setAudioAttributes(new AudioAttributes.Builder()
+                  .setContentType(C.CONTENT_TYPE_MOVIE)
+                  .setUsage(C.USAGE_MEDIA)
+                  .build(), true)
               // .setBandwidthMeter(new com.google.android.exoplayer2.upstream.DefaultBandwidthMeter.Builder(/* context= */ this)
               //     .setInitialBitrateEstimate(com.google.android.exoplayer2.upstream.DefaultBandwidthMeter.DEFAULT_INITIAL_BITRATE_ESTIMATE * 12)
               //     .setSlidingWindowMaxWeight(com.google.android.exoplayer2.upstream.DefaultBandwidthMeter.DEFAULT_SLIDING_WINDOW_MAX_WEIGHT * 3)
@@ -282,10 +287,6 @@ public class PlayerActivity extends AppCompatActivity
               .build();
       player.addListener(new PlayerEventListener());
       player.addAnalyticsListener(new EventLogger(trackSelector));
-      player.setAudioAttributes(new AudioAttributes.Builder()
-          .setContentType(C.CONTENT_TYPE_MOVIE)
-          .setUsage(C.USAGE_MEDIA)
-          .build(), true);
       player.setPlayWhenReady(startAutoPlay);
       playerView.setPlayer(player);
       debugViewHelper = new DebugTextViewHelper(player, debugTextView);
