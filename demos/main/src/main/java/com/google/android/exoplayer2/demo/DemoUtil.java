@@ -94,7 +94,7 @@ public final class DemoUtil {
       cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
       CookieHandler.setDefault(cookieManager);
       httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT);
-      // httpDataSourceFactory = new com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource.Factory(new okhttp3.OkHttpClient.Builder().build()).setUserAgent(USER_AGENT);
+      // httpDataSourceFactory = new com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource.Factory(new okhttp3.OkHttpClient()).setUserAgent(USER_AGENT);
     }
     return httpDataSourceFactory;
   }
