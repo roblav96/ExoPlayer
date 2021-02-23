@@ -285,6 +285,7 @@ public class PlayerActivity extends AppCompatActivity
                   .setPrioritizeTimeOverSizeThresholds(false)
                   .build())
               .build();
+      player.experimentalSetOffloadSchedulingEnabled(true);
       player.addListener(new PlayerEventListener());
       player.addAnalyticsListener(new EventLogger(trackSelector));
       player.setPlayWhenReady(startAutoPlay);

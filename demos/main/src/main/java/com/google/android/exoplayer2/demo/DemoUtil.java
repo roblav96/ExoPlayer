@@ -84,7 +84,11 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
-        // .experimentalSetAsynchronousBufferQueueingEnabled(true)
+        .experimentalSetAsynchronousBufferQueueingEnabled(true)
+        .experimentalSetForceAsyncQueueingSynchronizationWorkaround(false)
+        .experimentalSetSynchronizeCodecInteractionsWithQueueingEnabled(false)
+        .setEnableAudioFloatOutput(true)
+        .setEnableAudioOffload(true)
         .setExtensionRendererMode(extensionRendererMode);
   }
 
