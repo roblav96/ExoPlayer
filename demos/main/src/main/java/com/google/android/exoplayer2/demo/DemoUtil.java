@@ -84,9 +84,9 @@ public final class DemoUtil {
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
     return new DefaultRenderersFactory(context.getApplicationContext())
-        .experimentalSetAsynchronousBufferQueueingEnabled(true)
-        .experimentalSetForceAsyncQueueingSynchronizationWorkaround(false)
-        .experimentalSetSynchronizeCodecInteractionsWithQueueingEnabled(false)
+        // .experimentalSetAsynchronousBufferQueueingEnabled(true)
+        // .experimentalSetForceAsyncQueueingSynchronizationWorkaround(false)
+        // .experimentalSetSynchronizeCodecInteractionsWithQueueingEnabled(false)
         .setEnableAudioFloatOutput(true)
         .setEnableAudioOffload(true)
         .setExtensionRendererMode(extensionRendererMode);
@@ -97,8 +97,8 @@ public final class DemoUtil {
       CookieManager cookieManager = new CookieManager();
       cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
       CookieHandler.setDefault(cookieManager);
-      httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT);
-      // httpDataSourceFactory = new com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource.Factory(new okhttp3.OkHttpClient()).setUserAgent(USER_AGENT);
+      // httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT);
+      httpDataSourceFactory = new com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource.Factory(new okhttp3.OkHttpClient()).setUserAgent(USER_AGENT);
     }
     return httpDataSourceFactory;
   }
